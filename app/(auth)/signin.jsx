@@ -1,0 +1,102 @@
+import { Image, ScrollView, StyleSheet, Text, View, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import FormField from '../../components/FormField';
+import CustomButton from '../../components/CustomButton';
+import { Link, useRouter } from 'expo-router';
+import { useAuth } from '../../services/AuthContext';
+import { showMessage } from 'react-native-flash-message';
+
+
+const SignIn = () => {
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const { login } = useAuth();
+
+  const handleSignIn = async () => {
+    if (!form.email || !form.password) {
+      showMessage({
+        message: "Error",
+        description: "Please fill in all fields",
+        type: "danger",
+      });
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await login(form.email, form.password);
+      console.log("Success", "Signed in successfully");
+      router.push('/explore');
+      setForm({
+        email: '',
+        password: '',
+      });
+    } catch (error) {
+      showMessage({
+        message: "Error",
+        description: "Wrong email or password.",
+        type: "danger",
+      });
+      setForm({
+        email: '',
+        password: '',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePress = () => {
+    if (!isSubmitting) {
+      handleSignIn();
+    }
+  };
+
+  return (
+    <SafeAreaView className="bg-primary h-full">
+      <ScrollView>
+        <View className="w-full min-h-[82vh] justify-center px-4 my-6 items-center">
+         
+          <Text className="text-2xl text-white text-semibold mb-5 mt-5 text-center font-psemibold">Log In</Text>
+          <FormField
+            title="Email"
+            value={form.email}
+            handleChangeText={(e) => setForm({ ...form, email: e })}
+            otherStyle="mt-7"
+            keyboardType="email-address"
+          />
+          <FormField
+            title="Password"
+            value={form.password}
+            handleChangeText={(e) => setForm({ ...form, password: e })}
+            otherStyle="mt-7"
+          />
+          <CustomButton
+            title='Log In'
+            containerStyle={styles.buttonStyle}
+            isLoading={isSubmitting}
+            onPress={handlePress}
+          />
+          <View className='justify-center pt-5 flex-row gap-2'>
+            <Text className='text-md text-gray-100 font-pregular'>Don't have an account?</Text>
+            <Link href='/signup' className='text-md font-psemibold text-secondary'>Sign Up</Link>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+};
+
+export default SignIn;
+
+const styles = StyleSheet.create({
+  buttonStyle: {
+    width: '100%',
+    borderRadius: 15,
+    marginTop: 20,
+  }
+});
